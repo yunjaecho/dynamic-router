@@ -1,0 +1,8 @@
+
+# 리프래시를 위해 추가
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "refresh"
+
