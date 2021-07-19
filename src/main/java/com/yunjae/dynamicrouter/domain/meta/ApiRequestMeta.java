@@ -14,6 +14,8 @@ public class ApiRequestMeta {
 
     private String apiId;
 
+    private String version;
+
     private HttpMethod httpMethod;
 
     private String uri;

@@ -3,15 +3,16 @@ package com.yunjae.dynamicrouter.handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yunjae.dynamicrouter.domain.meta.ApiRequestMeta;
 import com.yunjae.dynamicrouter.domain.meta.ApiRequestParameter;
+import com.yunjae.dynamicrouter.service.manger.api.ApiCallService;
 import com.yunjae.dynamicrouter.service.manger.meta.ApiMetaService;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,9 +24,11 @@ import static reactor.core.publisher.MonoExtensionsKt.toMono;
 public class ApiHandler {
 
     private final ApiMetaService service;
+    private final ApiCallService apiCallService;
 
-    public ApiHandler(ApiMetaService service) {
+    public ApiHandler(ApiMetaService service, ApiCallService apiCallService) {
         this.service = service;
+        this.apiCallService = apiCallService;
     }
 
     public Mono<ServerResponse> getCommApiData(ServerRequest request)  {
@@ -62,6 +65,8 @@ public class ApiHandler {
                             return ServerResponse.badRequest().contentType(MediaType.APPLICATION_JSON).body(Mono.just(resultMap), Map.class);
                         }
                     }
+                    // Header 값 설정
+                    apiReqParam.setValue(header.get(0));
                 }
                 // Path Variable 체크
                 else if(apiReqParam.getReqType().equals("PATH")) {
@@ -69,6 +74,8 @@ public class ApiHandler {
                         resultMap.put("rsp_msg", "PATH 정보(" + apiReqParam.getName() + ") 존재하지 않습니다.");
                         return ServerResponse.badRequest().contentType(MediaType.APPLICATION_JSON).body(Mono.just(resultMap), Map.class);
                     }
+                    // Path Variable 값 설정
+                    apiReqParam.setValue(pathParams.get(apiReqParam.getName()));
                 }
                 // Query Param 체크
                 else if(apiReqParam.getReqType().equals("QUERY")) {
@@ -76,28 +83,44 @@ public class ApiHandler {
                         resultMap.put("rsp_msg", "QUERY 정보(" + apiReqParam.getName() + ") 존재하지 않습니다.");
                         return ServerResponse.badRequest().contentType(MediaType.APPLICATION_JSON).body(Mono.just(resultMap), Map.class);
                     }
+
+                    // Query Param 값 설정
+                    pathParams.get(queryParams.get(apiReqParam.getName()));
                 }
-                // Body Param 체크
-//                else if(apiReqParam.getReqType().equals("BODY")) {
-//                    if (bodyMap == null || (bodyMap.get(apiReqParam.getName()) == null || bodyMap.get(apiReqParam.getName()).isEmpty())) {
-//                        resultMap.put("rsp_msg", "BODY 정보(" + apiReqParam.getName() + ") 존재하지 않습니다.");
-//                        return ServerResponse.badRequest().contentType(MediaType.APPLICATION_JSON).body(Mono.just(resultMap), Map.class);
-//                    }
-//                }
             }
         }
 
         if (method == HttpMethod.POST) {
-            Mono<Map> body = request.body(BodyExtractors.toMono(Map.class));
-            System.out.println("1111111");
+            return request.bodyToMono(Map.class)
+                    .publishOn(Schedulers.boundedElastic())
+                    .switchIfEmpty(Mono.error(new IllegalStateException("Post json required")))
+                    .flatMap(data -> {
+                        for (ApiRequestParameter apiReqParam : apiRequestParameters) {
+                            if (apiReqParam.getReqType().equals("BODY")) {
+                                if (apiReqParam.isMandatory() && (data.get(apiReqParam.getName()) == null || ((String)(data.get(apiReqParam.getName()))).isEmpty())) {
+                                    resultMap.put("rsp_msg", "BODY 정보(" + apiReqParam.getName() + ") 존재하지 않습니다.");
+                                    return ServerResponse.badRequest().contentType(MediaType.APPLICATION_JSON).body(Mono.just(resultMap), Map.class);
+                                }
+                                apiReqParam.setValue((String)data.get(apiReqParam.getName()));
+                            }
+                        }
 
+                        Mono<Map> resultMono = apiCallService.apiCall(apiRequestMeta);
+
+                        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                                .body(resultMono, Map.class);
+
+                    })
+                    .onErrorResume(err -> {
+                        err.printStackTrace();
+                        return ServerResponse.badRequest().build();
+                    });
+        } else {
+            Mono<Map> resultMono = apiCallService.apiCall(apiRequestMeta);
+
+            return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                    .body(resultMono, Map.class);
         }
-
-        resultMap.put("rsp_code", "000000");
-        resultMap.put("rsp_msg", "성공");
-
-        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(Mono.just(resultMap), Map.class);
     }
 
 

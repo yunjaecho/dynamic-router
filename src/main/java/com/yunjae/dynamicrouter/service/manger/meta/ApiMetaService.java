@@ -17,7 +17,7 @@ public class ApiMetaService {
 
     @PostConstruct
     public void init() {
-        ApiRequestMeta BA01 = new ApiRequestMeta("은행-001", HttpMethod.GET, "/bank/accounts", Arrays.asList(
+        ApiRequestMeta BA01 = new ApiRequestMeta("은행-001", "v1", HttpMethod.GET, "/bank/accounts", Arrays.asList(
                 new ApiRequestParameter("HEADER", "Authorization", true, null),
                 new ApiRequestParameter("HEADER", "x-api-tran-id", true, null),
                 new ApiRequestParameter("QUERY", "org_code", true, null),
@@ -27,7 +27,7 @@ public class ApiMetaService {
         ));
         apiRequestMetas.add(BA01);
 
-        ApiRequestMeta BA02 = new ApiRequestMeta("은행-002", HttpMethod.POST, "/bank/accounts/deposit/basic", Arrays.asList(
+        ApiRequestMeta BA02 = new ApiRequestMeta("은행-002", "v1", HttpMethod.POST, "/bank/accounts/deposit/basic", Arrays.asList(
                 new ApiRequestParameter("HEADER", "Authorization", true, null),
                 new ApiRequestParameter("HEADER", "x-api-tran-id", true, null),
                 new ApiRequestParameter("BODY", "org_code", true, null),

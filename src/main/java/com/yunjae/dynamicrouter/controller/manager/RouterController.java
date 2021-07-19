@@ -1,14 +1,11 @@
 package com.yunjae.dynamicrouter.controller.manager;
 
-import com.yunjae.dynamicrouter.service.manger.RouterService;
+import com.yunjae.dynamicrouter.service.manger.route.RouterService;
 import org.springframework.beans.factory.config.SingletonBeanRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.ServerResponse;
 
 @RestController
 public class RouterController {

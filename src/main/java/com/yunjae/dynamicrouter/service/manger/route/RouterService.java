@@ -1,4 +1,4 @@
-package com.yunjae.dynamicrouter.service.manger;
+package com.yunjae.dynamicrouter.service.manger.route;
 
 import com.yunjae.dynamicrouter.domain.meta.ApiRequestMeta;
 import com.yunjae.dynamicrouter.handler.ApiHandler;
@@ -32,10 +32,10 @@ public class RouterService {
         apiRequestMetas.forEach(meta -> {
             if (meta.getHttpMethod() == HttpMethod.GET) {
                 routes.add(RouterFunctions.route()
-                        .GET(meta.getUri(), accept(APPLICATION_JSON), apiHandler::getCommApiData).build());
+                        .GET("/" + meta.getVersion() + meta.getUri(), accept(APPLICATION_JSON), apiHandler::getCommApiData).build());
             } else if(meta.getHttpMethod() == HttpMethod.POST) {
                 routes.add(RouterFunctions.route()
-                        .POST(meta.getUri(), accept(APPLICATION_JSON), apiHandler::getCommApiData).build());
+                        .POST("/" + meta.getVersion() + meta.getUri(), accept(APPLICATION_JSON), apiHandler::getCommApiData).build());
             }
         });
 

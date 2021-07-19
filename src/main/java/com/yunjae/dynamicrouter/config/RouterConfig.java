@@ -1,10 +1,10 @@
 package com.yunjae.dynamicrouter.config;
 
-import com.yunjae.dynamicrouter.handler.ApiHandler;
-import com.yunjae.dynamicrouter.service.manger.RouterService;
+import com.yunjae.dynamicrouter.service.manger.route.RouterService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.*;
+
 
 @Configuration
 public class RouterConfig {
