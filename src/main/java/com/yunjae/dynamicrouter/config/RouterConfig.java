@@ -17,7 +17,6 @@ public class RouterConfig {
 
 
     @Bean(name = "routerFunction")
-
     public RouterFunction<ServerResponse> routerFunction() {
         return service.getServerResponseRouterFunction();
     }

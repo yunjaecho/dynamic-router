@@ -1,5 +1,6 @@
 package com.yunjae.dynamicrouter.service.manger;
 
+import com.yunjae.dynamicrouter.domain.meta.ApiRequestMeta;
 import com.yunjae.dynamicrouter.handler.ApiHandler;
 import com.yunjae.dynamicrouter.service.manger.meta.ApiMetaService;
 import org.springframework.http.HttpMethod;
@@ -7,7 +8,10 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.server.*;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
+import java.util.List;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
 @Service
 public class RouterService {
@@ -23,13 +27,15 @@ public class RouterService {
     public RouterFunction<ServerResponse> getServerResponseRouterFunction() {
         RouterFunctions.Builder routes = RouterFunctions.route();
 
-        service.getApiRequestMetas().forEach(meta -> {
+        List<ApiRequestMeta> apiRequestMetas = service.getApiRequestMetas();
+
+        apiRequestMetas.forEach(meta -> {
             if (meta.getHttpMethod() == HttpMethod.GET) {
                 routes.add(RouterFunctions.route()
-                        .GET(meta.getUri(), accept(MediaType.APPLICATION_JSON), apiHandler::getCommApiData).build());
+                        .GET(meta.getUri(), accept(APPLICATION_JSON), apiHandler::getCommApiData).build());
             } else if(meta.getHttpMethod() == HttpMethod.POST) {
                 routes.add(RouterFunctions.route()
-                        .POST(meta.getUri(), accept(MediaType.APPLICATION_JSON), apiHandler::getCommApiData).build());
+                        .POST(meta.getUri(), accept(APPLICATION_JSON), apiHandler::getCommApiData).build());
             }
         });
 
